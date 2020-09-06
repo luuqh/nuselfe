@@ -1,0 +1,26 @@
+
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{6989167D-11E4-40FE-8C1A-2192A86A7E90}") = "SELFE_netcdf_jet_v4.2.1", "SELF\SELFE_netcdf_jet_v4.2.1.vfproj", "{C6E850AA-D60A-4E8E-99FB-10E5AE9DE78A}"
+EndProject
+Project("{6989167D-11E4-40FE-8C1A-2192A86A7E90}") = "combine_output", "post_proc_netcdf_v2\combine_output\combine_output.vfproj", "{518C207B-8A19-4EBF-BFD0-65283F11515E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C6E850AA-D60A-4E8E-99FB-10E5AE9DE78A}.Debug|Win32.ActiveCfg = Debug|Win32
+		{C6E850AA-D60A-4E8E-99FB-10E5AE9DE78A}.Debug|Win32.Build.0 = Debug|Win32
+		{C6E850AA-D60A-4E8E-99FB-10E5AE9DE78A}.Release|Win32.ActiveCfg = Release|Win32
+		{C6E850AA-D60A-4E8E-99FB-10E5AE9DE78A}.Release|Win32.Build.0 = Release|Win32
+		{518C207B-8A19-4EBF-BFD0-65283F11515E}.Debug|Win32.ActiveCfg = Debug|Win32
+		{518C207B-8A19-4EBF-BFD0-65283F11515E}.Debug|Win32.Build.0 = Debug|Win32
+		{518C207B-8A19-4EBF-BFD0-65283F11515E}.Release|Win32.ActiveCfg = Release|Win32
+		{518C207B-8A19-4EBF-BFD0-65283F11515E}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
