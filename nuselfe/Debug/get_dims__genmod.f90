@@ -1,0 +1,10 @@
+        !COMPILER-GENERATED INTERFACE MODULE: Thu Oct 27 11:48:08 2011
+        MODULE GET_DIMS__genmod
+          INTERFACE 
+            SUBROUTINE GET_DIMS(FILE_NAME,NX,NY)
+              CHARACTER(LEN=50), INTENT(IN) :: FILE_NAME
+              INTEGER(KIND=4), INTENT(OUT) :: NX
+              INTEGER(KIND=4), INTENT(OUT) :: NY
+            END SUBROUTINE GET_DIMS
+          END INTERFACE 
+        END MODULE GET_DIMS__genmod

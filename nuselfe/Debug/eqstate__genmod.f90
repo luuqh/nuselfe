@@ -1,0 +1,10 @@
+        !COMPILER-GENERATED INTERFACE MODULE: Thu Oct 27 11:48:10 2011
+        MODULE EQSTATE__genmod
+          INTERFACE 
+            FUNCTION EQSTATE(TEM2,SAL2) RESULT(EQSTATE_0)
+              REAL(KIND=8), INTENT(IN) :: TEM2
+              REAL(KIND=8), INTENT(IN) :: SAL2
+              REAL(KIND=8) :: EQSTATE_0
+            END FUNCTION EQSTATE
+          END INTERFACE 
+        END MODULE EQSTATE__genmod

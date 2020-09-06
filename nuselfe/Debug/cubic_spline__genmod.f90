@@ -1,0 +1,13 @@
+        !COMPILER-GENERATED INTERFACE MODULE: Thu Oct 27 11:48:11 2011
+        MODULE CUBIC_SPLINE__genmod
+          INTERFACE 
+            SUBROUTINE CUBIC_SPLINE(NPTS,XCOR,YY,YP1,YP2,YPP)
+              INTEGER(KIND=4), INTENT(IN) :: NPTS
+              REAL(KIND=8), INTENT(IN) :: XCOR(NPTS)
+              REAL(KIND=8), INTENT(IN) :: YY(NPTS)
+              REAL(KIND=8), INTENT(IN) :: YP1
+              REAL(KIND=8), INTENT(IN) :: YP2
+              REAL(KIND=8), INTENT(OUT) :: YPP(NPTS)
+            END SUBROUTINE CUBIC_SPLINE
+          END INTERFACE 
+        END MODULE CUBIC_SPLINE__genmod

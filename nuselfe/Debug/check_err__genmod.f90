@@ -1,0 +1,8 @@
+        !COMPILER-GENERATED INTERFACE MODULE: Thu Oct 27 11:48:08 2011
+        MODULE CHECK_ERR__genmod
+          INTERFACE 
+            SUBROUTINE CHECK_ERR(IRET)
+              INTEGER(KIND=4) :: IRET
+            END SUBROUTINE CHECK_ERR
+          END INTERFACE 
+        END MODULE CHECK_ERR__genmod

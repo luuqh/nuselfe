@@ -1,0 +1,11 @@
+        !COMPILER-GENERATED INTERFACE MODULE: Thu Oct 27 11:48:08 2011
+        MODULE FIX_COORDS__genmod
+          INTERFACE 
+            SUBROUTINE FIX_COORDS(LON,LAT,NX,NY)
+              INTEGER(KIND=4), INTENT(IN) :: NY
+              INTEGER(KIND=4), INTENT(IN) :: NX
+              REAL(KIND=8), INTENT(INOUT) :: LON(NX,NY)
+              REAL(KIND=8), INTENT(INOUT) :: LAT(NX,NY)
+            END SUBROUTINE FIX_COORDS
+          END INTERFACE 
+        END MODULE FIX_COORDS__genmod
