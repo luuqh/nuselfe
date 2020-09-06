@@ -1,0 +1,1 @@
+the sflux_*.nc files have to limit in ONE day for each file.
