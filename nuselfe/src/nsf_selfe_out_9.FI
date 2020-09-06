@@ -1,0 +1,302 @@
+!-----------------------------------------------------------------------------------
+!c    COPYRIGHT 2010: prof. Pavel Tkalich(TMSI), Xu Haihua(TMSI), Dao My Ha (TMSI)
+!c    1. This subroutine is developed by Xu Haihua(TMSI), Dao My Ha(TMSI) and supervised
+!c       by prof. Pavel Tkalich(TMSI)
+!     2. TMSI: Tropical Marine Science Institute, Singapore
+!c    3. For any enquiry pls contact tmsxh@nus.edu.sg
+!-----------------------------------------------------------------------------------
+!NOTE: this veriosn is only for SELFE version 3.1h
+!-------------------------------------------------------------------------------
+!every ihfskip we need to create a new file.
+!-------------------------------------------------------------------------------
+        IF( mod(it-1,ihfskip)==0  ) THEN
+        
+
+        
+        
+            nc_file_name  ="";   
+            WRITE(nc_file_name,"(i12)")(it-1)/ihfskip+1;
+            nc_file_name ="outputs/"//TRIM(ADJUSTL(nc_file_name))//".nc"
+            
+!          WRITE(16,"(A,A)") "start to create netcdf file:",TRIM(nc_file_name);
+            IF(myrank ==0) THEN
+                WRITE(16,"(A,A)") "start to create netcdf file:", TRIM(nc_file_name);
+            ENDIF
+            
+            CALL nsf_selfe_nectcdf_out_init(noutput);            
+    !-------------------------------------------------------------------------------
+    ! rank 0 in charge of create the file. 
+            IF(myrank == 0) THEN
+                CALL nfs_self_create_file(nsf_self,TRIM(nc_file_name),NF90_CLASSIC_MODEL,noutput,iof);
+                CALL nfs_close_file(nsf_self);
+                WRITE(*,*) "rank 0 create selfe netcdf file finshed file name=",TRIM(nc_file_name)
+            ENDIF
+          
+    !----barrier the proc and prepare to re-poen the file        
+           CALL parallel_barrier !synchronize before starting next time step
+
+    !---------open the file.
+!          CALL nfs_open_file(nsf_self,TRIM(nc_file_name),NF90_WRITE);
+
+    !---------write the grid info first.
+           CALL nsf_selfe_out_grid();
+           
+    !    WRITE(*,*) "start nfs_close_file.FI...."         
+    !---------close the file.........     
+!           CALL nfs_close_file(nsf_self);
+        ENDIF
+
+
+        CALL parallel_barrier ;
+        
+     
+        
+        IF (mod(it-1,nspool)==0) then
+        
+              nsf_selfe_time_start = MPI_Wtime();        
+
+              IF(myrank ==0) THEN
+                WRITE(16,"(A,A)")"start to write data to netcdf file",TRIM(nc_file_name);
+              ENDIF   
+!----------------------------------------------------------
+!for each process, output the data...
+!----------------------------------------------------------
+                nsf_out_ntime    = nsf_out_ntime + 1;     
+
+!      IF(nsf_out_ntime ==10) STOP;
+!-----------------------------------------------------------------
+!for rank ==0 output the time ...
+!-----------------------------------------------------------------                  
+                 IF(myrank ==0) THEN !rank 0 open the file and output time 
+                  
+!---------open the netcdf file-----
+                      CALL nfs_open_file(nsf_self,TRIM(nc_file_name),NF90_WRITE);  
+
+!----------get the variable handle----
+                      CALL get_nfs_self_vars_id(nsf_self);
+                      nsf_self_ncid = nsf_self%ncid;
+                  
+                      temp_out(1) = time; !output time is seconds
+                      CALL nsf_get_var_id(nsf_self,"time",nsf_var_time_id) 
+                      
+                      IF(nsf_float == NF90_FLOAT) THEN                            
+                          istat = nf90_put_var(nsf_self_ncid,nsf_var_time_id,REAL(temp_out,4), &
+                                               (/nsf_out_ntime/),(/1/));
+                      ELSEIF(nsf_float == NF90_DOUBLE) THEN  
+                          istat = nf90_put_var(nsf_self_ncid,nsf_var_time_id,REAL(temp_out,8), &
+                                               (/nsf_out_ntime/),(/1/));                  
+                      ENDIF        
+                      CALL  check_error(istat)
+                      
+!                      CALL nfs_close_file(nsf_self);  
+                                        
+               ENDIF    !IF(myrank ==0) THEN   
+
+!---------------------------------------------------
+!start to output the data.S
+!---------------------------------------------------
+                      DO j =1,noutput
+                      
+                        temp_var_id  = nsf_var_output_ids(j);
+                        
+                        IF(iof(j) ==0) CYCLE;
+ 
+                        IF( j <= 12) THEN
+                        
+                            IF( j == 1 )THEN
+!                                temp_out(1)=eta2(i);
+                                CALL nfs_collect_rdata_2d(eta2,nsf_data2d)
+                            ELSEIF(j ==2) THEN
+!                                temp_out(1)=pr(i)
+                                CALL nfs_collect_rdata_2d(pr,nsf_data2d)
+                            else if(j.eq.3.and.ihconsv.ne.0) then
+!                                temp_out(1)=airt1(i)
+                                CALL nfs_collect_rdata_2d(airt1,nsf_data2d)
+                            else if(j.eq.4.and.ihconsv.ne.0) then
+!                                temp_out(1)=shum1(i)
+                                CALL nfs_collect_rdata_2d(shum1,nsf_data2d)
+                            else if(j.eq.5.and.ihconsv.ne.0) then
+!                                temp_out(1)=srad(i)
+                                CALL nfs_collect_rdata_2d(srad,nsf_data2d)
+                            else if(j.eq.6.and.ihconsv.ne.0) then
+!                                temp_out(1)=fluxsu(i)
+                                CALL nfs_collect_rdata_2d(fluxsu,nsf_data2d)
+                            else if(j.eq.7.and.ihconsv.ne.0) then
+!                                temp_out(1)=fluxlu(i)
+                                CALL nfs_collect_rdata_2d(fluxlu,nsf_data2d)
+                            else if(j.eq.8.and.ihconsv.ne.0) then
+!                                temp_out(1)=hradu(i)
+                                CALL nfs_collect_rdata_2d(hradu,nsf_data2d)
+                            else if(j.eq.9.and.ihconsv.ne.0) then
+!                                temp_out(1)=hradd(i)
+                                CALL nfs_collect_rdata_2d(hradd,nsf_data2d)
+                            else if(j.eq.10.and.ihconsv.ne.0) then
+!                                temp_out(1)=sflux(i)
+                                CALL nfs_collect_rdata_2d(sflux,nsf_data2d)
+                            else if(j.eq.11.and.isconsv.ne.0) then
+!                                temp_out(1)=fluxevp(i)
+                                 CALL nfs_collect_rdata_2d(fluxevp,nsf_data2d)
+                            else if(j.eq.12.and.isconsv.ne.0) then
+!                                 temp_out(1)=fluxprc(i)  
+                                 CALL nfs_collect_rdata_2d(fluxprc,nsf_data2d)
+                            ENDIF                     
+
+!-----------rank 0 output the data 
+                            IF( myrank ==0) THEN                                                            
+                                IF(nsf_float == NF90_FLOAT) THEN     
+                                  istat = nf90_put_var(nsf_self_ncid,temp_var_id,REAL(nsf_data2d,4), &
+                                                   start=(/1,nsf_out_ntime/),count=(/np_global,1/));
+                                ELSEIF(nsf_float == NF90_DOUBLE) THEN 
+                                  istat = nf90_put_var(nsf_self_ncid,temp_var_id,REAL(nsf_data2d,8), &
+                                                   start=(/1,nsf_out_ntime/),count=(/np_global,1/));
+
+                                ENDIF
+                                
+                                CALL  check_error(istat)
+                            ENDIF !IF( myrank ==0) THEN  
+                                                                                  
+                            ELSEIF(j<=15) then
+                              if(j==13) then
+                                if(nws==0) then
+                                  temp_out(1) =0
+                                  temp_out2(1)=0
+                                else
+                                  temp_out(1) =windx(i)
+                                  temp_out2(1)=windy(i)
+                                endif
+                              else if(j==14) then
+                                temp_out(1) =tau(i,1)
+                                temp_out2(1)=tau(i,2)
+                              else !j=15
+                                temp_out(1) =dav(i,1)
+                                temp_out2(1)=dav(i,2)
+                              endif
+                              
+            !                    IF(nsf_float == NF90_FLOAT) THEN     
+            !                      istat = nf90_put_var(nsf_self_ncid,temp_var_id,REAL(temp_out,4), &
+            !                                       start=(/global_id,nsf_out_ntime/),count=(/1,1/));
+            !                    ELSEIF(nsf_float == NF90_DOUBLE) THEN 
+            !                      istat = nf90_put_var(nsf_self_ncid,temp_var_id,REAL(temp_out,8), &
+            !                                       start=(/global_id,nsf_out_ntime/),count=(/1,1/));
+            !                    ENDIF
+            !                    
+            !                    CALL  check_error(istat)                      
+                            ELSEIF(j<26) then
+                                if(j == 16) then
+!                                 floatout=ww2(k,i)                                
+                                  CALL  nfs_collect_rdata_3d(ww2,2,nsf_data3d)                  
+                                else if(j.eq.17) then
+!                                    temp_out(1)=tnd(k,i)
+                                  CALL  nfs_collect_rdata_3d(tnd,2,nsf_data3d)                  
+
+                                else if(j.eq.18) then
+!                                    temp_out(1)=snd(k,i)
+                                  CALL  nfs_collect_rdata_3d(snd,2,nsf_data3d)                  
+
+                                else if(j.eq.19) then
+!                                    temp_out(1)=prho(k,i)
+                                  CALL  nfs_collect_rdata_3d(prho,2,nsf_data3d)                  
+
+                                else if(j.eq.20) then
+!                                    temp_out(1)=dfh(i,k)
+                                  CALL  nfs_collect_rdata_3d(dfh,1,nsf_data3d)                  
+
+                                    
+                                else if(j.eq.21) then
+ !                                   temp_out(1)=dfv(i,k)
+                                  CALL  nfs_collect_rdata_3d(dfv,1,nsf_data3d)                  
+ 
+                                else if(j.eq.22) then
+ !                                   temp_out(1)=q2(i,k)
+                                  CALL  nfs_collect_rdata_3d(q2,1,nsf_data3d)                  
+
+                                else if(j.eq.23) then
+ !                                   temp_out(1)=xl(i,k)
+                                  CALL  nfs_collect_rdata_3d(xl,1,nsf_data3d)                  
+ 
+                                else if(j==24) then
+!                                    if(idry(i)==1) then
+!                                      z(i)=0
+!                                    else
+!                                      temp_out(1)=z(max0(k,kbp(i)),i)
+!                                    endif
+                                   DO i =1 ,np
+                                    IF(idry(i) ==1) z(:,i) =0;           !version 3.1h
+!                                    IF(idry(i) ==1) znl(:,i) =0;        !version 3.0b
+                                   ENDDO
+                                   
+                                   CALL  nfs_collect_rdata_3d(z,2,nsf_data3d)    !for version 3.0b              
+!                                    CALL  nfs_collect_rdata_3d(znl,2,nsf_data3d)  !for version 3.1h
+                                
+                                else if(j==25) then
+!                                    temp_out(1)=qnon(k,i)
+                                   CALL  nfs_collect_rdata_3d(qnon,2,nsf_data3d)                  
+
+                                endif
+                                
+            !    rank 0 output the data .                                
+                                IF( myrank ==0) THEN                                     
+                                    IF(nsf_float == NF90_FLOAT) THEN     
+                                      istat = nf90_put_var(nsf_self_ncid,temp_var_id,REAL(nsf_data3d,4), &
+                                                       start=(/1,1,nsf_out_ntime/),count=(/nvrt,np_global,1/));
+                                    ELSEIF(nsf_float == NF90_DOUBLE) THEN 
+                                      istat = nf90_put_var(nsf_self_ncid,temp_var_id,REAL(nsf_data3d,8), &
+                                                       start=(/1,1,nsf_out_ntime/),count=(/nvrt,np_global,1/));
+                                    ENDIF
+                                    CALL  check_error(istat)                                    
+                                ENDIF    !IF( myrank ==0) THEN   
+                           
+                  
+                            ELSEIF(j == 26) then                        
+!                                  temp_out(1)    = uu2(k,i); 
+!                                  temp_out2(1)   = vv2(k,i);  
+                                   CALL  nfs_collect_rdata_3d(uu2,2,nsf_data3d)                  
+                                   IF( myrank ==0) THEN                                     
+                                        CALL nsf_get_var_id(nsf_self,"u",temp_var_id) 
+                                        IF(nsf_float == NF90_FLOAT) THEN     
+                                          istat = nf90_put_var(nsf_self_ncid,temp_var_id,REAL(nsf_data3d,4), &
+                                                           start=(/1,1,nsf_out_ntime/),count=(/nvrt,np_global,1/));
+                                        ELSEIF(nsf_float == NF90_DOUBLE) THEN 
+                                          istat = nf90_put_var(nsf_self_ncid,temp_var_id,REAL(nsf_data3d,8), &
+                                                           start=(/1,1,nsf_out_ntime/),count=(/nvrt,np_global,1/));
+                                        ENDIF
+                                        CALL  check_error(istat)                                        
+                                    ENDIF    !IF( myrank ==0) THEN   
+
+                                   CALL  nfs_collect_rdata_3d(vv2,2,nsf_data3d)                  
+                                   IF( myrank ==0) THEN  
+                                        CALL nsf_get_var_id(nsf_self,"v",temp_var_id)                                                                       
+                                        IF(nsf_float == NF90_FLOAT) THEN     
+                                          istat = nf90_put_var(nsf_self_ncid,temp_var_id,REAL(nsf_data3d,4), &
+                                                           start=(/1,1,nsf_out_ntime/),count=(/nvrt,np_global,1/));
+                                        ELSEIF(nsf_float == NF90_DOUBLE) THEN 
+                                          istat = nf90_put_var(nsf_self_ncid,temp_var_id,REAL(nsf_data3d,8), &
+                                                           start=(/1,1,nsf_out_ntime/),count=(/nvrt,np_global,1/));
+                                        ENDIF
+                                        CALL  check_error(istat)                                        
+                                    ENDIF    !IF( myrank ==0) THEN   
+
+                              ENDIF !------------------------(j)
+
+                        
+                      ENDDO  !DO j =1,noutput
+!!sync before barrier.......................    
+!                      istat = nf90_sync(nsf_self_ncid);
+!                      CALL  check_error(istat)     
+                
+!-----------------------close the file -----------------------
+                      IF(myrank ==0) THEN                                                  
+                            CALL nfs_close_file(nsf_self);
+                      ENDIF      
+     
+           CALL  mpi_barrier(comm,ierr)    ;  ! barrier and output the time        
+           
+           nsf_selfe_time_end = MPI_Wtime()   ; 
+           IF(myrank ==0) THEN
+           WRITE(16,*)"Finished to output netcdf file:  "
+           WRITE(16,"(A,F10.2,A)")"Write data to netcdf file takes: ", &
+                  nsf_selfe_time_end - nsf_selfe_time_start, "seconds" 
+       
+           ENDIF
+       
+      ENDIF  

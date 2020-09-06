@@ -1,0 +1,236 @@
+      nsf_out_ntime    = nsf_out_ntime + 1;     
+
+!      IF(nsf_out_ntime ==10) STOP;
+      
+      IF(myrank ==0) THEN
+      
+!---------open the netcdf file-----
+          CALL nfs_open_file(nsf_self,TRIM(nc_file_name),NF90_WRITE);  
+
+!----------get the variable handle----
+          CALL get_nfs_self_vars_id(nsf_self);
+          nsf_self_ncid = nsf_self%ncid;
+      
+          temp_out(1) = time;
+          CALL nsf_get_var_id(nsf_self,"time",nsf_var_time_id) 
+          
+          IF(nsf_float == NF90_FLOAT) THEN                            
+              istat = nf90_put_var(nsf_self_ncid,nsf_var_time_id,REAL(temp_out,4), &
+                                   (/nsf_out_ntime/),(/1/));
+          ELSEIF(nsf_float == NF90_DOUBLE) THEN  
+              istat = nf90_put_var(nsf_self_ncid,nsf_var_time_id,REAL(temp_out,8), &
+                                   (/nsf_out_ntime/),(/1/));                  
+          ENDIF        
+          CALL  check_error(istat) 
+          
+          CALL nfs_close_file(nsf_self);
+      ENDIF
+      
+#ifdef USE_MPIMODULE     
+! barrier the proc 
+       CALL parallel_barrier !synchronize before starting next time step
+
+#endif
+
+      DO iproc = 1,nproc
+
+!        WRITE(100+myrank,*) "myrank,iproc,nproc: ",myrank,iproc,nproc;
+        IF(myrank+1 == iproc) THEN !CURRENT proc to output
+
+!---------open the netcdf file-----
+          CALL nfs_open_file(nsf_self,TRIM(nc_file_name),NF90_WRITE);  
+
+!----------get the variable handle----
+          CALL get_nfs_self_vars_id(nsf_self);
+          nsf_self_ncid = nsf_self%ncid;
+
+!--------- For debug purpose output the id;
+!          DO i =1,noutput
+!            WRITE(10000+myrank,*) "nsf_var_output_ids ",nsf_var_output_ids(i);
+!          ENDDO   
+!          
+!          WRITE(10000+myrank,*) "------------------------------";
+!       
+!          OPEN(20000,FILE="global_id.dat",ACTION="WRITE",POSITION='APPEND');
+!
+!          DO i =1, np
+!            global_id= iplg(i);
+!            WRITE(20000,*) global_id;
+!          ENDDO 
+!     
+!          CLOSE(20000);
+      
+          DO j =1,noutput
+               temp_var_id  = nsf_var_output_ids(j);
+            
+            IF(iof(j) ==0) CYCLE;
+                         
+            DO i=1,np
+                
+                global_id= iplg(i);
+                
+                IF( j <= 12) THEN
+                    IF( j == 1 )THEN
+                        temp_out(1)=eta2(i);
+                    ELSEIF(j ==2) THEN
+                        temp_out(1)=airt1(i)
+                    else if(j.eq.3.and.ihconsv.ne.0) then
+                        temp_out(1)=airt1(i)
+                    else if(j.eq.4.and.ihconsv.ne.0) then
+                        temp_out(1)=shum1(i)
+                    else if(j.eq.5.and.ihconsv.ne.0) then
+                        temp_out(1)=srad(i)
+                    else if(j.eq.6.and.ihconsv.ne.0) then
+                        temp_out(1)=fluxsu(i)
+                    else if(j.eq.7.and.ihconsv.ne.0) then
+                        temp_out(1)=fluxlu(i)
+                    else if(j.eq.8.and.ihconsv.ne.0) then
+                        temp_out(1)=hradu(i)
+                    else if(j.eq.9.and.ihconsv.ne.0) then
+                        temp_out(1)=hradd(i)
+                    else if(j.eq.10.and.ihconsv.ne.0) then
+                        temp_out(1)=sflux(i)
+                    else if(j.eq.11.and.isconsv.ne.0) then
+                        temp_out(1)=fluxevp(i)
+                    else if(j.eq.12.and.isconsv.ne.0) then
+                        temp_out(1)=fluxprc(i)                    
+                    ENDIF                     
+
+                
+                    IF(nsf_float == NF90_FLOAT) THEN     
+                      istat = nf90_put_var(nsf_self_ncid,temp_var_id,REAL(temp_out,4), &
+                                       start=(/global_id,nsf_out_ntime/),count=(/1,1/));
+                    ELSEIF(nsf_float == NF90_DOUBLE) THEN 
+                      istat = nf90_put_var(nsf_self_ncid,temp_var_id,REAL(temp_out,8), &
+                                       start=(/global_id,nsf_out_ntime/),count=(/1,1/));
+                    ENDIF
+                    
+                    CALL  check_error(istat)                       
+                ELSEIF(j<=15) then
+                  if(j==13) then
+                    if(nws==0) then
+                      temp_out(1) =0
+                      temp_out2(1)=0
+                    else
+                      temp_out(1) =windx(i)
+                      temp_out2(1)=windy(i)
+                    endif
+                  else if(j==14) then
+                    temp_out(1) =tau(i,1)
+                    temp_out2(1)=tau(i,2)
+                  else !j=15
+                    temp_out(1) =dav(i,1)
+                    temp_out2(1)=dav(i,2)
+                  endif
+                  
+!                    IF(nsf_float == NF90_FLOAT) THEN     
+!                      istat = nf90_put_var(nsf_self_ncid,temp_var_id,REAL(temp_out,4), &
+!                                       start=(/global_id,nsf_out_ntime/),count=(/1,1/));
+!                    ELSEIF(nsf_float == NF90_DOUBLE) THEN 
+!                      istat = nf90_put_var(nsf_self_ncid,temp_var_id,REAL(temp_out,8), &
+!                                       start=(/global_id,nsf_out_ntime/),count=(/1,1/));
+!                    ENDIF
+!                    
+!                    CALL  check_error(istat)                      
+                ELSEIF(j<26) then
+                    DO  k=max0(1,kbp00(i)),nvrt
+                    
+                        temp_out(1)=0 !for some undefined variables
+                        if(j == 16) then
+                          temp_out(1) = ww2(k,i)
+                        else if(j.eq.17) then
+                            temp_out(1)=tnd(k,i)
+                        else if(j.eq.18) then
+                            temp_out(1)=snd(k,i)
+                        else if(j.eq.19) then
+                            temp_out(1)=prho(k,i)
+                        else if(j.eq.20) then
+                            temp_out(1)=dfh(i,k)
+                        else if(j.eq.21) then
+                            temp_out(1)=dfv(i,k)
+                        else if(j.eq.22) then
+                            temp_out(1)=q2(i,k)
+                        else if(j.eq.23) then
+                            temp_out(1)=xl(i,k)
+                        else if(j==24) then
+                            if(idry(i)==1) then
+                              temp_out(1)=0
+                            else
+                              temp_out(1)=z(max0(k,kbp(i)),i)
+                            endif
+                        else if(j==25) then
+                            temp_out(1)=qnon(k,i)
+                        endif
+                        
+                        IF(nsf_float == NF90_FLOAT) THEN        
+                          istat = nf90_put_var(nsf_self_ncid,temp_var_id,REAL(temp_out,4), &
+                                           (/k,global_id,nsf_out_ntime/),(/1,1,1/));
+                        ELSEIF(nsf_float == NF90_DOUBLE) THEN
+                          istat = nf90_put_var(nsf_self_ncid,temp_var_id,REAL(temp_out,8), &
+                                           (/k,global_id,nsf_out_ntime/),(/1,1,1/));                  
+                        ENDIF  
+                        CALL  check_error(istat)                            
+                   
+                    ENDDO  !DO  k=max0(1,kbp00(i)),nvrt                    
+                ELSEIF(j == 26) then                        
+ 
+                        
+                        DO k=max0(1,kbp00(i)),nvrt
+                            temp_out(1)    = uu2(k,i);
+                            temp_out2(1)   = vv2(k,i);                 
+
+                            IF(nsf_float == NF90_FLOAT) THEN                         
+                              istat = nf90_put_var(nsf_self_ncid,nsf_var_u_id,REAL(temp_out,4), &
+                                               (/k,global_id,nsf_out_ntime/),(/1,1,1/));                    
+                              istat = nf90_put_var(nsf_self_ncid,nsf_var_v_id,REAL(temp_out2,4), &
+                                               (/k,global_id,nsf_out_ntime/),(/1,1,1/));                    
+                            ELSEIF(nsf_float == NF90_DOUBLE) THEN
+                               istat = nf90_put_var(nsf_self_ncid,temp_var_id,REAL(temp_out,8), &
+                                               (/k,global_id,nsf_out_ntime/),(/1,1,1/));  
+                                                                 
+                               istat = nf90_put_var(nsf_self_ncid,nsf_var_v_id,REAL(temp_out2,8), &
+                                               (/k,global_id,nsf_out_ntime/),(/1,1,1/));                    
+                            ENDIF
+                            CALL  check_error(istat)                            
+                        ENDDO
+                  ENDIF !------------------------(j)
+
+            
+          
+            ENDDO !DO i=1,np
+            
+
+          
+          ENDDO  !DO j =1,noutput
+!!sync before barrier.......................    
+          istat = nf90_sync(nsf_self_ncid);
+          CALL  check_error(istat)     
+              
+          CALL nfs_close_file(nsf_self);
+       ENDIF ! IF(myrank == i ) THEN 
+       
+       
+       
+ 
+       
+!--------------------------------------------------------------------
+!For parallel code marrier the procs.       
+
+#ifdef USE_MPIMODULE     
+! barrier the proc 
+       CALL parallel_barrier !synchronize before starting next time step
+
+#endif
+
+      ENDDO  ! DO i = 1,nproc
+
+!      CALL parallel_barrier !synchronize before starting next time step
+!      
+!      IF(myrank ==0)THEN
+!      OPEN(20000,FILE="global_id.dat",ACTION="WRITE",POSITION='APPEND');
+!
+!      WRITE(20000,*) "--------------------------";
+!      
+!      CLOSE(20000);
+!      ENDIF
+      

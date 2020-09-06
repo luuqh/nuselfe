@@ -1,0 +1,19 @@
+!This part is added for selfe
+      if(nhot==1.and.mod(it,nhot_write)==0) then
+        write(it_char,'(i72)')it
+        it_char=adjustl(it_char)
+        lit=len_trim(it_char)
+        it_char=it_char(1:lit)//'_0000'; lit=len_trim(it_char)
+        write(it_char(lit-3:lit),'(i4.4)') myrank
+        ihot_len=nbyte*(4+((6+4*ntracers)*nvrt+1)*ne+(8*nvrt+1)*ns+(3+22*nvrt)*np)
+        open(36,file='outputs/'//it_char(1:lit)//'_hotstart', &
+             ACTION="WRITE",FORM='BINARY',IOSTAT=info2) 
+        write(36) (time),it,ifile,(idry_e(i),( (we(j,i)), (tsel(1:2,j,i)), &
+     &( (trel0(l,j,i)), (trel(l,j,i)),l=1,ntracers),j=1,nvrt),i=1,ne), &
+     &(idry_s(i),( (su2(j,i)), (sv2(j,i)), (tsd(j,i)), (ssd(j,i)),j=1,nvrt),i=1,ns), &
+     &( (eta2(i)),idry(i),( (tnd(j,i)), (snd(j,i)), (tem0(j,i)), (sal0(j,i)), &
+     & (q2(i,j)), (xl(i,j)), (dfv(i,j)), (dfh(i,j)), (dfq1(i,j)), (dfq2(i,j)), &
+     & (qnon(j,i)),j=1,nvrt),i=1,np)
+        close(36)
+        if(myrank==0) write(16,*) 'hot start written',it,time
+      endif !nhot

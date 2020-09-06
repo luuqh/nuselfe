@@ -1,0 +1,41 @@
+Developer's notes:
+
+(1) Download the tar balls and retrieve the source code, utility code, libraries, and two simple tests;
+(2) study Makefile;
+(3) build graph partitioning library ParMetis - follow instruction inside;
+(4) make executible;
+(5) repeat the two sample tests: (a) adjust_test.tar.gz (Adjustment under gravity); 
+    (b) biotoy test (biotoy.tar.gz) for coupling with EcoSim. 
+
+About the source code (v3.0b): 
+(1) Options still missing: 
+  (a) better inundation algorithm (inunfl=1);
+(2) Input files: the main differences between serial and MPI version are in param.in, hotstart.in 
+    and nudging inputs for S,T. Note that param.in now uses a free format; see user manual for details.
+
+How to run:
+
+Remember to make a subdirectory inside the run directory call 'outputs/'
+where all process-specific outputs are stored.
+
+On Intel, 
+
+mpirun -np 24 -machinefile mfile pelfe
+
+where mfile is a list of machine names. Ask your system manager if your system is different.
+
+A more efficient and convenient way is to use the simple perl script 
+ run_mpi.pl (included in the bundle). It will automatically combine outputs
+ while the run is still on-going. You may need to make some simple changes inside
+ the script (e.g., update the location of combine_output4 etc). If the run is successful,
+ all combined outputs can be found in the directory outputs/.
+
+Postprocessing:
+
+Currently each process will spit out results
+ within its own subdomain, and the code combine_output4.f90 can be used to gather these files
+ into one global output. Use the simple perl scripts (run_mpi.pl 
+ or autocombine_MPI_before_run.pl) to do the combining automatically. 
+
+Most outputs are process-specific. This is the case for hotstart outputs as well, and so in order to hotstart, you need to combine outputs into one hotstart.in
+ using combine_hotstart3.f90.
