@@ -1,0 +1,20 @@
+
+How to run SELFE on Windows
+
+Step 1: Install Microsoft Visual Studio and Intel Fortran 11 with License
+Step 2: Install Microsoft HPC Package
+Step 3: Copy Libraries:
+	+ [MPI Folder] into: C:\Program Files\Microsoft HPC Pack 2008 SDK\Include
+	+ [NetCDF Folder] into:  C:\Program Files (x86)\
+	+ Files in [NCLib folder] into: C:\Windows\system\
+Step 4: Configuration Intel Fortran
+	Open Visual Studio / Tools / Options / Intel Fortran / Compilers / 
+	a) In Library, add:
+		C:\Program Files\Microsoft HPC Pack 2008 SDK\Lib\i386
+		C:\Program Files (x86)\netcdf\3.6.1\lib
+	b) In Include, add: 
+		C:\Program Files (x86)\netcdf\3.6.1\include
+		C:\Program Files\Microsoft HPC Pack 2008 SDK\Include
+		C:\Program Files\Microsoft HPC Pack 2008 SDK\Include\MPI\fortran_32
+Step 5: Install the MPICH2
+Step 6: Compile and run it.
